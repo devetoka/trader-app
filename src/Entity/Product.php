@@ -2,14 +2,19 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Metadata\ApiProperty;
 use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Get;
 use App\Repository\ProductRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\SerializedName;
 
 #[ORM\Entity(repositoryClass: ProductRepository::class)]
-#[ApiResource]
-class Product
+#[ApiResource(
+    security: "is_granted('ROLE_USER')"
+)]
+class Product extends BaseEntity
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -20,13 +25,13 @@ class Product
     private ?string $title = null;
 
     #[ORM\Column]
-    private ?float $sale_price = null;
+    private ?float $salePrice = null;
 
     #[ORM\Column(type: Types::TEXT)]
     private ?string $description = null;
 
     #[ORM\Column]
-    private ?bool $isPublished = null;
+    private ?bool $published = null;
 
     public function getId(): ?int
     {
@@ -47,12 +52,12 @@ class Product
 
     public function getSalePrice(): ?float
     {
-        return $this->sale_price;
+        return $this->salePrice;
     }
 
-    public function setSalePrice(float $sale_price): self
+    public function setSalePrice(float $salePrice): self
     {
-        $this->sale_price = $sale_price;
+        $this->salePrice = $salePrice;
 
         return $this;
     }
@@ -69,14 +74,15 @@ class Product
         return $this;
     }
 
+    #[SerializedName('published')]
     public function IsPublished(): ?bool
     {
-        return $this->isPublished;
+        return $this->published;
     }
 
-    public function setIsPublished(bool $isPublished): self
+    public function setPublished(bool $isPublished): self
     {
-        $this->isPublished = $isPublished;
+        $this->published = $isPublished;
 
         return $this;
     }
