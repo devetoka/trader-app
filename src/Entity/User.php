@@ -18,6 +18,7 @@ use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Serializer\Annotation\SerializedName;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: '`user`')]
@@ -34,6 +35,7 @@ use Symfony\Component\Serializer\Annotation\SerializedName;
     ],
     normalizationContext: ['groups' => ['user:read']],
     denormalizationContext: ['groups' => ['user:write']],
+    security: "is_granted('ROLE_USER')",
 )]
 #[UniqueEntity(fields: ['email'], message: 'There is already an account with this email')]
 #[UniqueEntity(fields: ['username'], message: 'It looks like another user took your username. Sorry!')]
@@ -47,15 +49,23 @@ class User extends BaseEntity implements UserInterface, PasswordAuthenticatedUse
 
     #[ORM\Column(length: 180, unique: true)]
     #[Groups(['user:read', 'user:write'])]
+    #[Assert\NotBlank]
+    #[Assert\Email]
     private ?string $email = null;
 
     #[ORM\Column(length: 20, unique: true)]
     #[Groups(['user:read', 'user:write'])]
+    #[Assert\NotBlank]
+    #[Assert\Length(
+        min: 2, max: 15,
+        minMessage: 'Username should have at least 2 characters', maxMessage: 'Username should be less than 15'
+    )]
     private ?string $username = null;
 
 
     #[ORM\Column]
     #[Groups(['user:read', 'user:write'])]
+    #[Assert\NotBlank]
     private array $roles = [];
 
     /**
@@ -64,8 +74,10 @@ class User extends BaseEntity implements UserInterface, PasswordAuthenticatedUse
     #[ORM\Column]
     private ?string $password = null;
 
-    #[Groups(['user:read', 'user:write'])]
+    #[Groups(['user:write'])]
     #[SerializedName('password')]
+    #[Assert\NotBlank]
+    #[Assert\Regex(pattern: '/^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$/')]
     private ?string $plainPassword = null;
 
     #[ORM\OneToMany(mappedBy: 'ownedBy', targetEntity: ApiToken::class, orphanRemoval: true)]
