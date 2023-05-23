@@ -28,9 +28,10 @@ class UserProcessor implements ProcessorInterface
             'DELETE' =>  $this->deleteOperation->mutate($data),
             default => throw new HttpException(400, 'Invalid http method', )
         };
+        $data = $operator->getData();
 
-        $this->innerProcessor->process($operator->getData(), $operation, $uriVariables, $context);
+        $this->innerProcessor->process($data, $operation, $uriVariables, $context);
 
-        $operator->postProcessorOperation();
+        $operator->postProcessorOperation($data);
     }
 }

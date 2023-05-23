@@ -10,5 +10,5 @@ interface MutatorInterface
 
     public function getData(): BaseEntity;
 
-    public function postProcessorOperation(): void;
+    public function postProcessorOperation(BaseEntity $data): void;
 }

@@ -17,13 +17,15 @@ class PatchOperation implements MutatorInterface
         // perform mutation here
     }
 
-    public function postProcessorOperation(): void
-    {
-       // send a message that profile was updated
-    }
+
 
     public function getData(): BaseEntity
     {
         return $this->mutatedData;
+    }
+
+    public function postProcessorOperation(BaseEntity $data): void
+    {
+        // TODO: Implement postProcessorOperation() method.
     }
 }

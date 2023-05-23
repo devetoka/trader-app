@@ -17,13 +17,15 @@ class DeleteOperation implements MutatorInterface
         //perform mutation  here
     }
 
-    public function postProcessorOperation(): void
-    {
-       // do something when a user is deleted
-    }
+
 
     public function getData(): BaseEntity
     {
         return $this->mutatedData;
+    }
+
+    public function postProcessorOperation(BaseEntity $data): void
+    {
+        // TODO: Implement postProcessorOperation() method.
     }
 }
