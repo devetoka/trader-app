@@ -1,6 +1,26 @@
 version: '3'
 
 services:
+
+  server:
+    image: 'nginx:alpine'
+    working_dir: /application
+    volumes:
+      - './app:/application'
+      - './log/:/var/log/nginx/'
+      - './docker/nginx/nginx.conf:/etc/nginx/conf.d/default.conf'
+    ports:
+      - '8080:80'
+
+  application:
+    build:
+      dockerfile: docker/php/Dockerfile
+      context: .
+    working_dir: /application
+    volumes:
+      - './app:/application'
+      - './docker/php/php-ini-overrides.ini:/etc/php/8.2/fpm/conf.d/99-overrides.ini'
+
 ###> doctrine/doctrine-bundle ###
   database:
     image: postgres:${POSTGRES_VERSION:-15}-alpine
@@ -13,7 +33,7 @@ services:
     volumes:
       - database_data:/var/lib/postgresql/data:rw
       # You may use a bind-mounted host directory instead, so that it is harder to accidentally remove the volume and lose all your data!
-      - ./docker/db/data:/var/lib/postgresql/data:rw
+#      - ./docker/db/data:/var/lib/postgresql/data:rw
 ##< doctrine/doctrine-bundle ###
 
 volumes:
