@@ -4,15 +4,17 @@ services:
 
   server:
     image: 'nginx:alpine'
+    container_name: 'nginx-server'
     working_dir: /application
     volumes:
       - './app:/application'
-      - './log/:/var/log/nginx/'
+      - './log/:/var/log/nginx'
       - './docker/nginx/nginx.conf:/etc/nginx/conf.d/default.conf'
     ports:
       - '8080:80'
 
   application:
+    container_name: 'application'
     build:
       dockerfile: docker/php/Dockerfile
       context: .
@@ -20,11 +22,14 @@ services:
     volumes:
       - './app:/application'
       - './docker/php/php-ini-overrides.ini:/etc/php/8.2/fpm/conf.d/99-overrides.ini'
+      - './php:/etc/php/8.2/cli'
 
 ###> doctrine/doctrine-bundle ###
   database:
     image: postgres:${POSTGRES_VERSION:-15}-alpine
     container_name: postgres-db
+    links:
+      - application
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-app}
       # You should definitely change the password in production
@@ -38,6 +43,8 @@ services:
   rabbitmq:
     image: rabbitmq:management
     container_name: rabbitmq
+    links:
+      - application
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-guest}

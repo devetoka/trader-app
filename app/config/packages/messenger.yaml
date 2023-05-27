@@ -11,7 +11,7 @@ framework:
 
         routing:
             # Route your messages to the transports
-#            'App\Message\AsyncMessageInterface': async
+            'App\Message\AsyncMessageInterface': async
 
 # when@test:
 #    framework:

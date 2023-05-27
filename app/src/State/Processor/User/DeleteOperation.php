@@ -12,7 +12,7 @@ class DeleteOperation implements MutatorInterface
 {
     private ?BaseEntity $mutatedData = null;
 
-    public function mutate(mixed $data) : self
+    public function mutate(mixed $data, array $context = []) : self
     {
         //perform mutation  here
     }

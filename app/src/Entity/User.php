@@ -2,14 +2,18 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Action\PlaceholderAction;
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\Delete;
 use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\Patch;
 use ApiPlatform\Metadata\Post;
+use App\Controller\EmailVerificationController;
+use App\DTO\User\ForgotPasswordDTO;
 use App\Operations\UserEndpoints;
 use App\Repository\UserRepository;
+use App\State\Processor\User\ForgotPasswordProcessor;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
@@ -26,6 +30,7 @@ use Symfony\Component\Validator\Constraints as Assert;
     operations: [
             new Get(),
             new Post(
+                name: 'user.register',
                 uriTemplate: '/register',
                 security: 'is_granted("PUBLIC_ACCESS")'
             ),
@@ -33,10 +38,53 @@ use Symfony\Component\Validator\Constraints as Assert;
             new Delete(),
             new GetCollection()
     ],
-    normalizationContext: ['groups' => ['user:read']],
+    normalizationContext: [
+        'skip_null_values' => false,
+        'groups' => ['user:read']
+    ],
     denormalizationContext: ['groups' => ['user:write']],
     security: "is_granted('ROLE_USER')",
 )]
+
+#[ApiResource(
+    operations: [
+        new Post(
+            name: 'user.verify',
+            uriTemplate: '/verify',
+            openapiContext: [
+                "summary" => "verifies a user resource"
+            ],
+            denormalizationContext: ['groups' => ['email:verify']],
+            normalizationContext: ['groups' => ['email:verify:read']],
+            validationContext: ['groups' => ['email:verify']],
+        ),
+        new Post(
+            uriTemplate: '/forgot-password',
+            status: 204,
+            openapiContext: [
+                "summary" => "Sends a mail for password reset",
+                "response" => []
+            ],
+            normalizationContext: ['groups' => ['email:forgot:read']],
+            denormalizationContext: ['groups' => ['email:forgot']],
+            validationContext: ['groups' => ['email:forgot']],
+            input: ForgotPasswordDTO::class,
+            name: 'user.forgot-password',
+            processor: ForgotPasswordProcessor::class,
+        ),
+        new Post(
+            uriTemplate: '/reset-password',
+            openapiContext: [
+                "summary" => "Sends a mail for password reset"
+            ],
+            denormalizationContext: ['groups' => ['email:reset']]
+        )
+    ],
+
+    security: "is_granted('PUBLIC_ACCESS')"
+
+)]
+
 #[UniqueEntity(fields: ['email'], message: 'There is already an account with this email')]
 #[UniqueEntity(fields: ['username'], message: 'It looks like another user took your username. Sorry!')]
 class User extends BaseEntity implements UserInterface, PasswordAuthenticatedUserInterface
@@ -49,7 +97,7 @@ class User extends BaseEntity implements UserInterface, PasswordAuthenticatedUse
 
     #[ORM\Column(length: 180, unique: true)]
     #[Groups(['user:read', 'user:write'])]
-    #[Assert\NotBlank]
+    #[Assert\NotBlank()]
     #[Assert\Email]
     private ?string $email = null;
 
@@ -82,6 +130,15 @@ class User extends BaseEntity implements UserInterface, PasswordAuthenticatedUse
 
     #[ORM\OneToMany(mappedBy: 'ownedBy', targetEntity: ApiToken::class, orphanRemoval: true)]
     private Collection $apiTokens;
+
+    #[ORM\Column(nullable: true)]
+    #[Groups(['user:read'])]
+    private ?\DateTimeImmutable $verifiedAt = null;
+
+    #[Assert\NotBlank(groups: ['email:verify'])]
+    #[Groups(['email:verify'])]
+    #[SerializedName('token')]
+    public ?string $verifyToken = null;
 
     public function __construct()
     {
@@ -222,5 +279,29 @@ class User extends BaseEntity implements UserInterface, PasswordAuthenticatedUse
             ->filter(fn (ApiToken $token) => $token->isValid())
             ->map(fn (ApiToken $token) => $token->getToken())
             ->toArray();
+    }
+
+    public function getVerifiedAt(): ?\DateTimeImmutable
+    {
+        return $this->verifiedAt;
+    }
+
+    public function setVerifiedAt(?\DateTimeImmutable $verifiedAt): self
+    {
+        $this->verifiedAt = $verifiedAt;
+
+        return $this;
+    }
+
+    public function getVerifiedToken(): ?string
+    {
+        return $this->verifyToken;
+    }
+
+    public function setVerifiedToken(?string $token): self
+    {
+        $this->verifyToken = $token;
+
+        return $this;
     }
 }

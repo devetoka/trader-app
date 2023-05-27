@@ -6,7 +6,7 @@ use App\Entity\BaseEntity;
 
 interface MutatorInterface
 {
-    public function mutate(BaseEntity $data): self;
+    public function mutate(BaseEntity $data, array $context): self;
 
     public function getData(): BaseEntity;
 

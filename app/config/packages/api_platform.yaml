@@ -1,4 +1,6 @@
 api_platform:
+  exception_to_status:
+    App\Exception\EmailVerificationHandlerException: 400
   swagger:
     api_keys:
         access_token:
